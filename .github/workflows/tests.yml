@@ -6,6 +6,21 @@ on:
 jobs:
   iris:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - 2024.3
+          - latest-em
+          - latest-preview
+    services:
+      iris:
+        image: containers.intersystems.com/intersystems/iris-community:${{ matrix.image }}
+        ports:
+          - 1972:1972
+        options: >-
+          --name iris
+          --health-cmd "/usr/irissys/dev/Cloud/ICM/waitReady.sh -m 1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,5 +30,3 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test
-        env:
-          IRIS_IMAGE: "containers.intersystems.com/intersystems/iris-community:latest-preview"
