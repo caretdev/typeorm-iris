@@ -10,5 +10,9 @@
   "spec": [
     "./build/compiled/test"
   ],
+  "globals": [
+    "container",
+    "connectionOptions"
+  ],
   "timeout": 90000
 }

@@ -8,17 +8,18 @@ import {
 } from "typeorm"
 
 export function getTypeOrmConfig(): IRISConnectionOptions[] {
+    const globalOptions = global.connectionOptions
     // const options = inject("dataSourceOptions") as IRISConnectionOptions
     return [
         {
             // @ts-ignore
             type: "iris",
             name: "default",
-            host: "localhost",
-            port: 1972,
-            namespace: "USER",
-            username: "_SYSTEM",
-            password: "SYS",
+            host: globalOptions.host,
+            port: globalOptions.port,
+            namespace: globalOptions.ns,
+            username: globalOptions.user,
+            password: globalOptions.pwd,
         },
     ]
 }

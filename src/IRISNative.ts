@@ -1,4 +1,9 @@
 const IRISNative = require("@intersystems/intersystems-iris-native")
+import { Connection } from "@intersystems/intersystems-iris-native"
+
+export interface IRISConnection extends Connection {
+    query: (queryString: string, argSets?: any[]) => any
+}
 
 type IRISConnectionOptions = {
     host: string
@@ -308,7 +313,9 @@ function createQuery(connection: any) {
 
 const createConnection = IRISNative.createConnection
 
-IRISNative.createConnection = (options: IRISConnectionOptions) => {
+IRISNative.createConnection = (
+    options: IRISConnectionOptions,
+): IRISConnection => {
     const connection = createConnection({ sharedmemory: false, ...options })
     connection.query = createQuery(connection)
     return connection

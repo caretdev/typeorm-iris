@@ -1,27 +1,27 @@
-// import { describe, beforeAll, afterAll, it, expect } from "vitest";
-// import { inject } from 'vitest'
-// // import { assert } from "chai";
-// import { IRISNative } from "../src/IRISNative";
+import { IRISNative, IRISConnection } from "../src/IRISNative"
 
-// describe("IRISNative test", () => {
-//   let connection;
-//   beforeAll(() => {
-//     connection = IRISNative.createConnection({...inject('connectionOptions')})
-//     expect(connection).toBeDefined();
-//   });
-//   afterAll(() => {
-//     if (connection) {
-//       connection.close();
-//     }
-//   });
-//   it("should work", async () => {
-//     const res = await connection.query("SELECT 1 AS test1, '2' AS test2", []).rows;
-//     expect(res).to.be.an("array");
-//     expect(res).to.have.lengthOf(1);
-//     expect(res[0]).to.be.an("object");
-//     expect(res[0]).to.have.property("test1");
-//     expect(res[0]).to.have.property("test2");
-//     expect(res[0]).to.have.property("test1", 1);
-//     expect(res[0]).to.have.property("test2", "2");
-//   });
-// });
+describe("IRISNative test", () => {
+    let connection: IRISConnection
+    before(() => {
+        const connectionOptions = global.connectionOptions
+        connection = IRISNative.createConnection({ ...connectionOptions })
+    })
+    after(() => {
+        if (connection) {
+            connection.close()
+        }
+    })
+    it("should work", async () => {
+        const res = await connection.query(
+            "SELECT 1 AS test1, '2' AS test2",
+            [],
+        ).rows
+        res.should.be.an("array")
+        res.should.have.lengthOf(1)
+        res[0].should.be.an("object")
+        res[0].should.have.property("test1")
+        res[0].should.have.property("test2")
+        res[0].should.have.property("test1", 1)
+        res[0].should.have.property("test2", "2")
+    })
+})
