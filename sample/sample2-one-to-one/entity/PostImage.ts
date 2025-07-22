@@ -1,0 +1,14 @@
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm/index"
+import { Post } from "./Post"
+
+@Entity("sample2_post_image")
+export class PostImage {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    url: string
+
+    @OneToOne(() => Post, (post) => post.image)
+    post: Post
+}

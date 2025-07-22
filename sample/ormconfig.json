@@ -1,0 +1,10 @@
+{
+  "name": "iris",
+  "type": "iris",
+  "host": "localhost",
+  "port": 1972,
+  "username": "_SYSTEM",
+  "password": "SYS",
+  "database": "USER",
+  "logging": false
+}

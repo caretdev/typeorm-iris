@@ -1,0 +1,69 @@
+{
+  "name": "typeorm-iris",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "npm run build && mocha",
+    "build": "rimraf build/compiled && tsc",
+    "format": "prettier --cache --write \"./**/*.ts\"",
+    "pack": "gulp pack",
+    "package": "gulp package",
+    "typecheck": "tsc --noEmit",
+    "watch": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "devDependencies": {
+    "@tsconfig/node16": "^16.1.4",
+    "@types/chai": "^4.3.20",
+    "@types/chai-as-promised": "^7.1.8",
+    "@types/debug": "^4.1.12",
+    "@types/gulp-rename": "^2.0.6",
+    "@types/gulp-sourcemaps": "^0.0.38",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^16.18.126",
+    "@types/sha.js": "^2.4.4",
+    "@types/sinon": "^10.0.20",
+    "@types/sinon-chai": "^4.0.0",
+    "@types/source-map-support": "^0.5.10",
+    "chai": "^4.5.0",
+    "chai-as-promised": "^7.1.2",
+    "class-transformer": "^0.5.1",
+    "globals": "^16.2.0",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
+    "gulp-replace": "^1.1.4",
+    "gulp-shell": "^0.8.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulpclass": "^0.2.0",
+    "lint-staged": "^15.5.2",
+    "mocha": "^10.8.2",
+    "nyc": "^17.1.0",
+    "prettier": "^2.8.8",
+    "reflect-metadata": "^0.2.2",
+    "remap-istanbul": "^0.13.0",
+    "rimraf": "^5.0.10",
+    "sinon": "^15.2.0",
+    "sinon-chai": "^3.7.0",
+    "sort-package-json": "^2.15.1",
+    "source-map-support": "^0.5.21",
+    "testcontainers-iris": "^0.1.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@intersystems/intersystems-iris-native": "^2.0.1",
+    "typeorm": "^0.3.25"
+  },
+  "peerDependenciesMeta": {
+    "ts-node": {
+      "optional": true
+    }
+  }
+}
