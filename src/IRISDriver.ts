@@ -24,6 +24,7 @@ import { InstanceChecker } from "typeorm/util/InstanceChecker"
 import { UpsertType } from "typeorm/driver/types/UpsertType"
 import { TypeORMError } from "typeorm/error/TypeORMError"
 import { IRISNative } from "./IRISNative"
+import { ConnectionIsNotSetError } from "typeorm"
 
 /**
  * Organizes communication with InterSystems IRIS.
@@ -331,7 +332,14 @@ export class IRISDriver implements Driver {
     /**
      * Closes connection with the database.
      */
-    async disconnect(): Promise<void> {}
+    async disconnect(): Promise<void> {
+        if (!this.master) {
+            throw new ConnectionIsNotSetError("iris")
+        }
+
+        this.master.close()
+        this.master = undefined
+    }
 
     /**
      * Creates a schema builder used to build and sync a schema.
