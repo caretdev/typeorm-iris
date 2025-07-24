@@ -1,6 +1,6 @@
 import { Column, Entity } from "typeorm"
-import { PrimaryColumn } from "typeorm/decorator/columns/PrimaryColumn"
-import { Generated } from "typeorm/decorator/Generated"
+import { PrimaryColumn } from "typeorm"
+import { Generated } from "typeorm"
 
 @Entity("sample01_post")
 export class Post {
