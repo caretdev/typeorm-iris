@@ -338,6 +338,7 @@ export class IRISDriver implements Driver {
         if (!this.master) {
             throw new ConnectionIsNotSetError("iris")
         }
+        this.master.closeAll()
 
         // this.master.close()
         // this.master = undefined
