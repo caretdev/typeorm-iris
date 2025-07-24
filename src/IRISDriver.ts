@@ -23,7 +23,7 @@ import { TableForeignKey } from "typeorm/schema-builder/table/TableForeignKey"
 import { InstanceChecker } from "typeorm/util/InstanceChecker"
 import { UpsertType } from "typeorm/driver/types/UpsertType"
 import { TypeORMError } from "typeorm/error/TypeORMError"
-import { IRISNative } from "./IRISNative"
+import { IRISConnectionPool } from "./IRISNative"
 import { ConnectionIsNotSetError } from "typeorm"
 
 /**
@@ -41,7 +41,7 @@ export class IRISDriver implements Driver {
 
     iris: any
 
-    master: any
+    master: IRISConnectionPool
 
     // -------------------------------------------------------------------------
     // Public Implemented Properties
@@ -302,8 +302,7 @@ export class IRISDriver implements Driver {
         options: IRISConnectionOptions,
         credentials: IRISConnectionCredentialsOptions,
     ): Promise<any> {
-        const { logger } = this.connection
-        logger.log("info", "Creating connection...")
+        // const { logger } = this.connection
         credentials = Object.assign({}, credentials)
         const connectionOptions = Object.assign(
             {},
@@ -318,7 +317,10 @@ export class IRISDriver implements Driver {
             },
             options.extra || {},
         )
-        const conn = IRISNative.createConnection(connectionOptions)
+        const conn = new IRISConnectionPool(
+            connectionOptions,
+            options.poolSize || 5,
+        )
         return Promise.resolve(conn)
     }
 
@@ -337,8 +339,8 @@ export class IRISDriver implements Driver {
             throw new ConnectionIsNotSetError("iris")
         }
 
-        this.master.close()
-        this.master = undefined
+        // this.master.close()
+        // this.master = undefined
     }
 
     /**
@@ -470,13 +472,6 @@ export class IRISDriver implements Driver {
      * Prepares given value to a value to be persisted, based on its column type and metadata.
      */
     preparePersistentValue(value: any, columnMetadata: ColumnMetadata): any {
-        // console.log(
-        //   "IRISDriver.preparePersistentValue:",[
-        //   columnMetadata.databaseName,
-        //   columnMetadata.type,
-        //   typeof value,
-        //   value,
-        // ])
         if (columnMetadata.transformer)
             value = ApplyValueTransformers.transformTo(
                 columnMetadata.transformer,
@@ -513,12 +508,6 @@ export class IRISDriver implements Driver {
      * Prepares given value to a value to be persisted, based on its column type or metadata.
      */
     prepareHydratedValue(value: any, columnMetadata: ColumnMetadata): any {
-        // console.log("IRISDriver.prepareHydratedValue:", [
-        //   columnMetadata.databaseName,
-        //   columnMetadata.type,
-        //   typeof value,
-        //   value,
-        // ])
         if (value === null || value === undefined)
             return columnMetadata.transformer
                 ? ApplyValueTransformers.transformFrom(
@@ -696,12 +685,11 @@ export class IRISDriver implements Driver {
      * Used for replication.
      * If replication is not setup then returns default connection's database connection.
      */
-    obtainMasterConnection(): Promise<any> {
+    async obtainMasterConnection(): Promise<any> {
         if (!this.master) {
             throw new TypeORMError("Driver not Connected")
         }
-        // return this.createConnection(this.options, this.options)
-        return Promise.resolve(this.master)
+        return this.master.getConnection()
     }
 
     /**

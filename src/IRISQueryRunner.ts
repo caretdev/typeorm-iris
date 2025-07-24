@@ -40,6 +40,8 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
      */
     driver: IRISDriver
 
+    protected releaseCallback?: () => void
+
     // -------------------------------------------------------------------------
     // Protected Properties
     // -------------------------------------------------------------------------
@@ -47,7 +49,7 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
     /**
      * Promise used to obtain a database connection from a pool for a first time.
      */
-    // protected databaseConnectionPromise: Promise<any>
+    protected databaseConnectionPromise: Promise<any>
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -70,7 +72,21 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
      * Returns obtained database connection.
      */
     async connect(): Promise<any> {
-        return this.driver.obtainMasterConnection()
+        if (this.databaseConnection) {
+            return Promise.resolve(this.databaseConnection)
+        }
+
+        if (this.databaseConnectionPromise)
+            return this.databaseConnectionPromise
+
+        this.databaseConnectionPromise = this.driver
+            .obtainMasterConnection()
+            .then((connection) => {
+                this.databaseConnection = connection
+                return this.databaseConnection
+            })
+
+        return this.databaseConnectionPromise
     }
 
     /**
@@ -78,7 +94,9 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
      * You cannot use query runner methods once its released.
      */
     async release(): Promise<void> {
-        // releasing connection are not supported by mongodb driver, so simply don't do anything here
+        this.isReleased = true
+        if (this.databaseConnection) this.databaseConnection.release()
+        return Promise.resolve()
     }
 
     /**
@@ -160,7 +178,6 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
         useStructuredResult = false,
     ): Promise<any> {
         if (this.isReleased) throw new QueryRunnerAlreadyReleasedError()
-        // const isInsertQuery = query.startsWith("INSERT INTO ")
 
         const databaseConnection = await this.connect()
 
@@ -208,6 +225,7 @@ export class IRISQueryRunner extends BaseQueryRunner implements QueryRunner {
             return Promise.reject(err)
         } finally {
             await broadcasterResult.wait()
+            databaseConnection.release()
         }
     }
 

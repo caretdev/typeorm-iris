@@ -15,13 +15,13 @@ describe("IRISNative test", () => {
         const res = await connection.query(
             "SELECT 1 AS test1, '2' AS test2",
             [],
-        ).rows
-        res.should.be.an("array")
-        res.should.have.lengthOf(1)
-        res[0].should.be.an("object")
-        res[0].should.have.property("test1")
-        res[0].should.have.property("test2")
-        res[0].should.have.property("test1", 1)
-        res[0].should.have.property("test2", "2")
+        )
+        res.rows.should.be.an("array")
+        res.rows.should.have.lengthOf(1)
+        res.rows[0].should.be.an("object")
+        res.rows[0].should.have.property("test1")
+        res.rows[0].should.have.property("test2")
+        res.rows[0].should.have.property("test1", 1)
+        res.rows[0].should.have.property("test2", "2")
     })
 })

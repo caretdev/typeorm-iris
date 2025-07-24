@@ -2,7 +2,9 @@ const IRISNative = require("@intersystems/intersystems-iris-native")
 import { Connection } from "@intersystems/intersystems-iris-native"
 
 export interface IRISConnection extends Connection {
-    query: (queryString: string, argSets?: any[]) => any
+    connectionId: string
+    query: (queryString: string, argSets?: any[]) => Promise<any>
+    release: () => Promise<void>
 }
 
 type IRISConnectionOptions = {
@@ -228,7 +230,6 @@ class ResultSet {
             })
             this.rows.push(row)
         }
-        // console.log("ResultSet rows fetched:", this.rows.length);
     }
 }
 
@@ -271,7 +272,7 @@ function normalizeArgs(args: any[]) {
 
 function createQuery(connection: any) {
     const iris = connection.createIris()
-    return function (queryString: string, argSets: any[]): any {
+    return async function (queryString: string, argSets: any[]): Promise<any> {
         argSets =
             argSets && argSets.length && Array.isArray(argSets[0])
                 ? argSets
@@ -304,10 +305,10 @@ function createQuery(connection: any) {
             }
             resultSet = st.execute(...args)
             if (resultSet.Message) {
-                return resultSet
+                return Promise.resolve(resultSet)
             }
         }
-        return resultSet
+        return Promise.resolve(resultSet)
     }
 }
 
@@ -322,4 +323,114 @@ IRISNative.createConnection = (
 }
 IRISNative.connect = IRISNative.createConnection
 
-export { IRISNative }
+class IRISConnectionPool {
+    private options: IRISConnectionOptions
+    private maxConnections: number
+    private pool: IRISConnection[] = []
+    private activeConnections: Set<IRISConnection> = new Set()
+    private connectionCount: number = 0
+
+    constructor(options: IRISConnectionOptions, maxConnections: number = 5) {
+        this.options = options
+        this.maxConnections = maxConnections
+    }
+
+    async getConnection(): Promise<IRISConnection> {
+        // Try to reuse an existing connection from pool
+        if (this.pool.length > 0) {
+            const connection = this.pool.pop()!
+            this.activeConnections.add(connection)
+            return connection
+        }
+
+        // Create new connection if under limit
+        if (this.connectionCount < this.maxConnections) {
+            try {
+                const connection = await new Promise<IRISConnection>(
+                    (resolve, reject) => {
+                        try {
+                            const conn = IRISNative.createConnection(
+                                this.options,
+                            )
+                            this.connectionCount++
+                            conn.connectionId = `conn-${this.connectionCount}`
+                            conn.release = () => {
+                                this.releaseConnection(conn)
+                                return Promise.resolve()
+                            }
+                            resolve(conn)
+                        } catch (error) {
+                            reject(error)
+                        }
+                    },
+                )
+                this.activeConnections.add(connection)
+                return connection
+            } catch (error) {
+                console.error("Failed to create connection:", error)
+                throw error
+            }
+        }
+
+        // Wait for a connection to become available
+        // throw new Error("Max connections reached, please try again later.")
+        return new Promise<IRISConnection>((resolve) => {
+            const checkPool = (): void => {
+                if (this.pool.length > 0) {
+                    const connection = this.pool.pop()!
+                    this.activeConnections.add(connection)
+                    resolve(connection)
+                } else {
+                    setTimeout(checkPool, 100)
+                }
+            }
+            checkPool()
+        })
+    }
+
+    releaseConnection(connection: IRISConnection): void {
+        if (this.activeConnections.has(connection)) {
+            this.activeConnections.delete(connection)
+            this.pool.push(connection)
+        }
+    }
+
+    async closeAll(): Promise<void> {
+        // Close active connections
+        for (const connection of this.activeConnections) {
+            try {
+                connection.close()
+            } catch (error) {
+                console.error("Error closing active connection:", error)
+            }
+        }
+        this.activeConnections.clear()
+
+        // Close pooled connections
+        for (const connection of this.pool) {
+            try {
+                connection.close()
+            } catch (error) {
+                console.error("Error closing pooled connection:", error)
+            }
+        }
+        this.pool.length = 0
+        this.connectionCount = 0
+
+        // Force garbage collection if available
+        if ((global as any).gc) {
+            ;(global as any).gc()
+            console.log("Forced garbage collection")
+        }
+    }
+
+    getPoolStats(): { active: number; pooled: number; total: number } {
+        return {
+            active: this.activeConnections.size,
+            pooled: this.pool.length,
+            total: this.connectionCount,
+        }
+    }
+}
+
+export { IRISNative, IRISConnectionPool }

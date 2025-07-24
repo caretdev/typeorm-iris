@@ -20,6 +20,7 @@ export function getTypeOrmConfig(): IRISConnectionOptions[] {
             namespace: globalOptions.ns,
             username: globalOptions.user,
             password: globalOptions.pwd,
+            poolSize: 5,
         },
     ]
 }
