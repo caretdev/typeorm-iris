@@ -1,6 +1,6 @@
 {
   "name": "typeorm-iris",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "scripts": {
     "test": "npm run build && mocha",
     "build": "rimraf build/compiled && tsc",
